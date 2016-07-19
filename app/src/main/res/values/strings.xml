@@ -6,4 +6,8 @@
     <string name="alert_dialog_ok_button_text">OK</string>
     <string name="title_activity_daily_forecast">DailyForecastActivity</string>
     <string name="no_daily_forecast">No data to display</string>
+    <string name="service_not_available">The Geocoder service is not available.</string>
+    <string name="invalid_lat_long_used">The latitude and longitude provided are not valid.</string>
+    <string name="no_address_found">No address found.</string>
+    <string name="address_found">Address found.</string>
 </resources>

@@ -27,6 +27,8 @@
 
         <activity android:name=".ui.HourlyForecastActivity"/>
 
+        <service android:name=".location.FetchAddressIntentService" android:exported="false"/>
+
     </application>
 
 </manifest>

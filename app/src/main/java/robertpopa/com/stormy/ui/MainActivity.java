@@ -2,6 +2,7 @@ package robertpopa.com.stormy.ui;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -28,13 +29,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import robertpopa.com.stormy.R;
+import robertpopa.com.stormy.location.LocationProvider;
 import robertpopa.com.stormy.weather.Constants;
 import robertpopa.com.stormy.weather.Current;
 import robertpopa.com.stormy.weather.Day;
 import robertpopa.com.stormy.weather.Forecast;
 import robertpopa.com.stormy.weather.Hour;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LocationProvider.LocationCallback{
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String ALERT_DIALOG_TAG = "alert_dialog";
     public static final String DAILY_FORECAST_TAG = "DAILY_FORECAST_TAG";
@@ -42,7 +44,11 @@ public class MainActivity extends AppCompatActivity {
     public static final String LOCATION_TAG = "LOCATION_TAG";
 
     private Forecast mForecast;
-    private String mLocation = "Madrid, Spain";
+    private LocationProvider mLocationProvider;
+    private double mCurrentLatitude;
+    private double mCurrentLongitude;
+    private String mCurrentAddress;
+    private boolean mIsNetworkAvailable;
 
     @BindView(R.id.timeValue) TextView mTimeValue;
     @BindView(R.id.temperatureValue) TextView mTemperatureValue;
@@ -52,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.summaryLabel) TextView mSummaryLabel;
     @BindView(R.id.progressBar) ProgressBar mProgressBar;
     @BindView(R.id.refreshImageView) ImageView mRefreshImageView;
+    @BindView(R.id.locationLabel) TextView mLocationLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,16 +69,33 @@ public class MainActivity extends AppCompatActivity {
 
         mProgressBar.setVisibility(View.INVISIBLE);
 
-        // Load the weather
-        loadWeather();
+        // Get the current location
+        mLocationProvider = new LocationProvider(this, this);
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if ( !mLocationProvider.hasLocation() ) {
+            mLocationProvider.connect();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mLocationProvider.disconnect();
     }
 
     private void loadWeather() {
-        //https://api.forecast.io/forecast/a6a52c11070a4f4cca26881e67cd684c/40.3657,-3.4824?units=si&lang=es
-        String forecastURL = Constants.BASE_URL + "/" + Constants.API_KEY + "/" + Constants.LATITUDE + "," + Constants.LONGITUDE;
 
-        if ( isNetworkAvailable() ) {
+        checkNetwork();
+
+        if ( mIsNetworkAvailable ) {
+
+            // Example URL including query filters
+            // https://api.forecast.io/forecast/a6a52c11070a4f4cca26881e67cd684c/40.3657,-3.4824?units=si&lang=es
+            String forecastURL = Constants.BASE_URL + "/" + Constants.API_KEY + "/" + mCurrentLatitude + "," + mCurrentLongitude + "?units=si";
 
             toggleRefresh();
 
@@ -144,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
         mHumidityValue.setText(String.valueOf(mForecast.getCurrent().getHumidity()));
         mPrecipValue.setText(String.valueOf(mForecast.getCurrent().getPrecipChance() + "%"));
         mSummaryLabel.setText(mForecast.getCurrent().getSummary());
+        mLocationLabel.setText(mCurrentAddress);
 
         Drawable drawable = getResources().getDrawable(mForecast.getCurrent().getIconId());
         mIconImageView.setImageDrawable(drawable);
@@ -232,13 +257,13 @@ public class MainActivity extends AppCompatActivity {
         dialog.show(getFragmentManager(), ALERT_DIALOG_TAG);
     }
 
-    public boolean isNetworkAvailable() {
+    public void checkNetwork() {
         ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = manager.getActiveNetworkInfo();
         if ( activeNetworkInfo != null && activeNetworkInfo.isConnected() ) {
-            return true;
+            mIsNetworkAvailable = true;
         } else {
-            return false;
+            mIsNetworkAvailable = false;
         }
     }
 
@@ -250,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
     public void startDailyActivity(View view){
         if ( mForecast != null ) {
             Intent intent = new Intent(this, DailyForecastActivity.class);
-            intent.putExtra(LOCATION_TAG, mLocation);
+            intent.putExtra(LOCATION_TAG, mCurrentAddress);
             intent.putExtra(DAILY_FORECAST_TAG, mForecast.getDailyForecast());
             startActivity(intent);
         }
@@ -263,5 +288,16 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra(HOURLY_FORECAST_TAG, mForecast.getHourlyForecast());
             startActivity(intent);
         }
+    }
+
+    @Override
+    public void handleNewLocation(Location location, String address) {
+        Log.i(TAG, "New location: " + location);
+        mCurrentLatitude = location.getLatitude();
+        mCurrentLongitude = location.getLongitude();
+        mCurrentAddress = address;
+
+        // Load the weather
+        loadWeather();
     }
 }

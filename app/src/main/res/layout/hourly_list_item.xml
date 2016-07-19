@@ -8,10 +8,10 @@
                 android:paddingBottom="8dp">
 
     <TextView
-        android:layout_width="80dp"
+        android:layout_width="65dp"
         android:layout_height="wrap_content"
         tools:text="12 PM"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:textColor="#ffffffff"
         android:id="@+id/timeLabel"
         android:layout_alignParentLeft="true"
@@ -37,7 +37,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:textColor="#ffffffff"
-        android:textSize="24sp"
+        android:textSize="20sp"
         tools:text="100"/>
 
     <TextView

@@ -6,6 +6,4 @@ package robertpopa.com.stormy.weather;
 public class Constants {
     public static final String BASE_URL     = "https://api.forecast.io/forecast";
     public static final String API_KEY      = "a6a52c11070a4f4cca26881e67cd684c";
-    public static final double LATITUDE     = 40.3657;
-    public static final double LONGITUDE    = -3.4824;
 }
