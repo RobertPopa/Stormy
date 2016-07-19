@@ -1,18 +1,18 @@
-package robertpopa.com.stormy;
+package robertpopa.com.stormy.ui;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,12 +27,22 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import robertpopa.com.stormy.forecast.Constants;
+import robertpopa.com.stormy.R;
+import robertpopa.com.stormy.weather.Constants;
+import robertpopa.com.stormy.weather.Current;
+import robertpopa.com.stormy.weather.Day;
+import robertpopa.com.stormy.weather.Forecast;
+import robertpopa.com.stormy.weather.Hour;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String ALERT_DIALOG_TAG = "alert_dialog";
-    private CurrentWeather mCurrentWeather;
+    public static final String DAILY_FORECAST_TAG = "DAILY_FORECAST_TAG";
+    public static final String HOURLY_FORECAST_TAG = "HOURLY_FORECAST_TAG";
+    public static final String LOCATION_TAG = "LOCATION_TAG";
+
+    private Forecast mForecast;
+    private String mLocation = "Madrid, Spain";
 
     @BindView(R.id.timeValue) TextView mTimeValue;
     @BindView(R.id.temperatureValue) TextView mTemperatureValue;
@@ -42,10 +52,6 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.summaryLabel) TextView mSummaryLabel;
     @BindView(R.id.progressBar) ProgressBar mProgressBar;
     @BindView(R.id.refreshImageView) ImageView mRefreshImageView;
-
-    @OnClick(R.id.refreshImageView) void refresh(){
-        loadWeather();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadWeather() {
+        //https://api.forecast.io/forecast/a6a52c11070a4f4cca26881e67cd684c/40.3657,-3.4824?units=si&lang=es
         String forecastURL = Constants.BASE_URL + "/" + Constants.API_KEY + "/" + Constants.LATITUDE + "," + Constants.LONGITUDE;
 
         if ( isNetworkAvailable() ) {
@@ -98,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (response.isSuccessful()) {
                         try {
-                            mCurrentWeather = getCurrentDetails(jsonData);
+                            mForecast = parseForecastDetails(jsonData);
                             runOnUiThread(new Runnable() {
                                 public void run() {
                                     updateDisplay();
@@ -132,22 +139,80 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateDisplay() {
-        mTemperatureValue.setText(String.valueOf(mCurrentWeather.getTemperature()));
-        mTimeValue.setText(MessageFormat.format("At {0} it will be", mCurrentWeather.getFormattedTime()));
-        mHumidityValue.setText(String.valueOf(mCurrentWeather.getHumidity()));
-        mPrecipValue.setText(String.valueOf(mCurrentWeather.getPrecipChance() + "%"));
-        mSummaryLabel.setText(mCurrentWeather.getSummary());
+        mTemperatureValue.setText(String.valueOf(mForecast.getCurrent().getTemperature()));
+        mTimeValue.setText(MessageFormat.format("At {0} it will be", mForecast.getCurrent().getFormattedTime()));
+        mHumidityValue.setText(String.valueOf(mForecast.getCurrent().getHumidity()));
+        mPrecipValue.setText(String.valueOf(mForecast.getCurrent().getPrecipChance() + "%"));
+        mSummaryLabel.setText(mForecast.getCurrent().getSummary());
 
-        Drawable drawable = getResources().getDrawable(mCurrentWeather.getIconId());
+        Drawable drawable = getResources().getDrawable(mForecast.getCurrent().getIconId());
         mIconImageView.setImageDrawable(drawable);
     }
 
-    private CurrentWeather getCurrentDetails(String jsonData) throws JSONException {
+    private Forecast parseForecastDetails(String jsonData) throws JSONException {
+        Forecast forecast = new Forecast();
+
+        forecast.setCurrent(getCurrentDetails(jsonData));
+        forecast.setHourlyForecast(getHourlyForecast(jsonData));
+        forecast.setDailyForecast(getDailyForecast(jsonData));
+
+        return forecast;
+    }
+
+    private Day[] getDailyForecast(String jsonData) throws JSONException {
+        JSONObject forecast = new JSONObject(jsonData);
+        String timezone = forecast.getString("timezone");
+        JSONObject daily = forecast.getJSONObject("daily");
+        JSONArray data = daily.getJSONArray("data");
+
+        Day[] days = new Day[data.length()];
+
+        for ( int i=0; i < data.length(); i++ ) {
+            JSONObject jsonHour = data.getJSONObject(i);
+            Day day = new Day();
+
+            day.setSummary(jsonHour.getString("summary"));
+            day.setTemperatureMax(jsonHour.getDouble("temperatureMax"));
+            day.setIcon(jsonHour.getString("icon"));
+            day.setTime(jsonHour.getLong("time"));
+            day.setTimeZone(timezone);
+
+            days[i] = day;
+        }
+
+        return days;
+    }
+
+    private Hour[] getHourlyForecast(String jsonData) throws JSONException  {
+        JSONObject forecast = new JSONObject(jsonData);
+        String timezone = forecast.getString("timezone");
+        JSONObject hourly = forecast.getJSONObject("hourly");
+        JSONArray data = hourly.getJSONArray("data");
+
+        Hour[] hours = new Hour[data.length()];
+
+        for ( int i=0; i < data.length(); i++ ) {
+            JSONObject jsonHour = data.getJSONObject(i);
+            Hour hour = new Hour();
+
+            hour.setSummary(jsonHour.getString("summary"));
+            hour.setTemperature(jsonHour.getDouble("temperature"));
+            hour.setIcon(jsonHour.getString("icon"));
+            hour.setTime(jsonHour.getLong("time"));
+            hour.setTimeZone(timezone);
+
+            hours[i] = hour;
+        }
+
+        return hours;
+    }
+
+    private Current getCurrentDetails(String jsonData) throws JSONException {
         JSONObject forecast = new JSONObject(jsonData);
         String timezone = forecast.getString("timezone");
 
         JSONObject currently = forecast.getJSONObject("currently");
-        CurrentWeather result = new CurrentWeather();
+        Current result = new Current();
         result.setHumidity(currently.getDouble("humidity"));
         result.setIcon(currently.getString("icon"));
         result.setPrecipChance(currently.getDouble("precipProbability"));
@@ -167,28 +232,6 @@ public class MainActivity extends AppCompatActivity {
         dialog.show(getFragmentManager(), ALERT_DIALOG_TAG);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
     public boolean isNetworkAvailable() {
         ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = manager.getActiveNetworkInfo();
@@ -196,6 +239,29 @@ public class MainActivity extends AppCompatActivity {
             return true;
         } else {
             return false;
+        }
+    }
+
+    @OnClick(R.id.refreshImageView) void refresh(){
+        loadWeather();
+    }
+
+    @OnClick(R.id.dailyButton)
+    public void startDailyActivity(View view){
+        if ( mForecast != null ) {
+            Intent intent = new Intent(this, DailyForecastActivity.class);
+            intent.putExtra(LOCATION_TAG, mLocation);
+            intent.putExtra(DAILY_FORECAST_TAG, mForecast.getDailyForecast());
+            startActivity(intent);
+        }
+    }
+
+    @OnClick(R.id.hourlyButton)
+    public void startHourlyActivity(View view){
+        if ( mForecast != null ) {
+            Intent intent = new Intent(this, HourlyForecastActivity.class);
+            intent.putExtra(HOURLY_FORECAST_TAG, mForecast.getHourlyForecast());
+            startActivity(intent);
         }
     }
 }

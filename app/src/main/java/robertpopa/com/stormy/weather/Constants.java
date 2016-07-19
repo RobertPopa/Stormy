@@ -1,4 +1,4 @@
-package robertpopa.com.stormy.forecast;
+package robertpopa.com.stormy.weather;
 
 /**
  * Created by RobertP on 11/07/16.
