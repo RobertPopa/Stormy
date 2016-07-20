@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stormy</string>
+    <string name="action_settings">Ajustes</string>
+    <string name="alert_dialog_title">Forecast error</string>
+    <string name="alert_dialog_message">Ha ocurrido un error. Por favor intente de nuevo.</string>
+    <string name="alert_dialog_ok_button_text">OK</string>
+    <string name="title_activity_daily_forecast">DailyForecastActivity</string>
+    <string name="no_daily_forecast">No hay datos para mostrar</string>
+    <string name="service_not_available">El servicio Geocoder no está disponible.</string>
+    <string name="invalid_lat_long_used">Los datos de longitud y latitud no son válidos.</string>
+    <string name="no_address_found">No se ha encontrado una dirección.</string>
+    <string name="address_found">Dirección encontrada.</string>
+    <string name="hourly_button_text">HORAS</string>
+    <string name="weekly_button_text">7 DIAS</string>
+    <string name="rain_snow_text">Precipitaciones</string>
+    <string name="humidity_text">Humedad</string>
+    <string name="loading_weather_text">Cargando el tiempo...</string>
+    <string name="getting_location_text">Cargando ubicación...</string>
+</resources>

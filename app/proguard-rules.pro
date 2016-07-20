@@ -26,3 +26,7 @@
     public static int d(...);
     public static int e(...);
 }
+
+-dontwarn java.nio.**
+-dontwarn org.codehaus.**
+-dontwarn android.content.res.**

@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import robertpopa.com.stormy.R;
+import robertpopa.com.stormy.utils.StormyUtils;
 import robertpopa.com.stormy.weather.Day;
 
 /**
@@ -57,10 +58,14 @@ public class DayAdapter extends BaseAdapter {
 
         Day day = mDays[position];
         holder.iconImageView.setImageResource(day.getIconId());
-        holder.temperatureLabel.setText(String.valueOf(day.getTemperatureMax()));
+        holder.temperatureLabel.setText(String.valueOf(day.getTemperatureMax()) + "°");
 
         if ( position == 0 ) {
             holder.dayLabel.setText("Today");
+            if ( "es".equals(StormyUtils.getUserLanguage()) ){
+                holder.dayLabel.setText("hoy");
+            }
+
         } else {
             holder.dayLabel.setText(day.getDayOfTheWeek());
         }

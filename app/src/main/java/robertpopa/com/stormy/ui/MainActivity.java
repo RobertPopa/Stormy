@@ -3,8 +3,6 @@ package robertpopa.com.stormy.ui;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,7 +16,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.MessageFormat;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -30,6 +27,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import robertpopa.com.stormy.R;
 import robertpopa.com.stormy.location.LocationProvider;
+import robertpopa.com.stormy.utils.StormyUtils;
 import robertpopa.com.stormy.weather.Constants;
 import robertpopa.com.stormy.weather.Current;
 import robertpopa.com.stormy.weather.Day;
@@ -48,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
     private double mCurrentLatitude;
     private double mCurrentLongitude;
     private String mCurrentAddress;
+    private String mCurrentUnitSystem;
     private boolean mIsNetworkAvailable;
 
     @BindView(R.id.timeValue) TextView mTimeValue;
@@ -67,7 +66,11 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
 
         ButterKnife.bind(this);
 
+        // Hide progress bar initially
         mProgressBar.setVisibility(View.INVISIBLE);
+
+        // Set default unit system
+        mCurrentUnitSystem = "si";
 
         // Get the current location
         mLocationProvider = new LocationProvider(this, this);
@@ -89,19 +92,32 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
 
     private void loadWeather() {
 
-        checkNetwork();
+        mIsNetworkAvailable = new StormyUtils(this).checkNetwork();
 
         if ( mIsNetworkAvailable ) {
 
+            String language = StormyUtils.getUserLanguage();
+
             // Example URL including query filters
             // https://api.forecast.io/forecast/a6a52c11070a4f4cca26881e67cd684c/40.3657,-3.4824?units=si&lang=es
-            String forecastURL = Constants.BASE_URL + "/" + Constants.API_KEY + "/" + mCurrentLatitude + "," + mCurrentLongitude + "?units=si";
+            StringBuilder forecastURL = new StringBuilder()
+                        .append(Constants.BASE_URL)
+                        .append("/")
+                        .append(Constants.API_KEY)
+                        .append("/")
+                        .append(mCurrentLatitude)
+                        .append(",")
+                        .append(mCurrentLongitude)
+                        .append("?lang=" + language)
+                        .append("&units=" + mCurrentUnitSystem);
+
+            Log.i(TAG, "URL: " + forecastURL.toString());
 
             toggleRefresh();
 
             OkHttpClient client = new OkHttpClient();
             Request request = new Request.Builder()
-                    .url(forecastURL)
+                    .url(forecastURL.toString())
                     .build();
 
             Call call = client.newCall(request);
@@ -163,8 +179,8 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
     }
 
     private void updateDisplay() {
-        mTemperatureValue.setText(String.valueOf(mForecast.getCurrent().getTemperature()));
-        mTimeValue.setText(MessageFormat.format("At {0} it will be", mForecast.getCurrent().getFormattedTime()));
+        mTemperatureValue.setText(String.valueOf(mForecast.getCurrent().getTemperature()) + "°");
+        mTimeValue.setText(mForecast.getCurrent().getFormattedTime());
         mHumidityValue.setText(String.valueOf(mForecast.getCurrent().getHumidity()));
         mPrecipValue.setText(String.valueOf(mForecast.getCurrent().getPrecipChance() + "%"));
         mSummaryLabel.setText(mForecast.getCurrent().getSummary());
@@ -255,16 +271,6 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
     private void alertUserAboutError() {
         AlertDialogFragment dialog = new AlertDialogFragment();
         dialog.show(getFragmentManager(), ALERT_DIALOG_TAG);
-    }
-
-    public void checkNetwork() {
-        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = manager.getActiveNetworkInfo();
-        if ( activeNetworkInfo != null && activeNetworkInfo.isConnected() ) {
-            mIsNetworkAvailable = true;
-        } else {
-            mIsNetworkAvailable = false;
-        }
     }
 
     @OnClick(R.id.refreshImageView) void refresh(){

@@ -39,10 +39,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Current location..."
+        tools:text="Velilla de San Antonio, Spain"
         android:id="@+id/locationLabel"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:textSize="24dp"
         android:textColor="#ffffffff"
+        android:gravity="center"
         android:layout_marginBottom="20dp"/>
 </RelativeLayout>

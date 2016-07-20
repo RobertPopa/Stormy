@@ -42,7 +42,7 @@ public class Current {
     }
 
     public String getFormattedTime(){
-        SimpleDateFormat sdf = new SimpleDateFormat("h:mm a");
+        SimpleDateFormat sdf = new SimpleDateFormat("E, dd/MM/yyyy H:mm");
         sdf.setTimeZone(TimeZone.getTimeZone(getTimeZone()));
         Date dateTime = new Date(getTime() * 1000);
         return sdf.format(dateTime);

@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="48dp"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
@@ -22,44 +22,43 @@
         android:textColor="@android:color/white"
         android:textSize="150sp"/>
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/degreeImageView"
-        android:layout_alignTop="@+id/temperatureValue"
-        android:layout_toEndOf="@+id/temperatureValue"
-        android:src="@drawable/degree"
-        android:layout_marginTop="50dp"/>
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="..."
         android:id="@+id/timeValue"
-        android:layout_above="@+id/degreeImageView"
+        android:layout_above="@+id/temperatureValue"
         android:layout_centerHorizontal="true"
         android:textColor="#80ffffff"
         android:textSize="18sp"/>
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Getting location..."
-        android:id="@+id/locationLabel"
+        android:orientation="horizontal"
+        android:gravity="center"
         android:layout_above="@+id/timeValue"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="60dp"
-        android:textSize="24sp"
-        android:textColor="@android:color/white"/>
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="40dp">
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/iconImageView"
-        android:layout_alignBottom="@+id/locationLabel"
-        android:layout_alignParentLeft="@+id/locationLabel"
-        android:layout_alignParentStart="true"
-        android:src="@drawable/cloudy_night"/>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/iconImageView"
+            android:src="@drawable/cloudy_night"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/getting_location_text"
+            tools:text="Velilla de San Antonio, Spain"
+            android:id="@+id/locationLabel"
+            android:layout_marginLeft="10dp"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:textColor="@android:color/white"/>
+
+    </LinearLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -80,7 +79,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="HUMIDITY"
+                android:text="@string/humidity_text"
                 android:id="@+id/humidityLabel"
                 android:textColor="#80ffffff"
                 android:gravity="center_horizontal"/>
@@ -105,7 +104,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="RAIN/SNOW"
+                android:text="@string/rain_snow_text"
                 android:id="@+id/precipLabel"
                 android:textColor="#80ffffff"
                 android:gravity="center_horizontal"/>
@@ -124,7 +123,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Getting weather..."
+        android:text="@string/loading_weather_text"
         android:id="@+id/summaryLabel"
         android:layout_below="@+id/linearLayout"
         android:layout_centerHorizontal="true"
@@ -161,7 +160,7 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="HOURLY"
+            android:text="@string/hourly_button_text"
             android:id="@+id/hourlyButton"
             android:layout_weight="1"
             android:background="#40ffffff"
@@ -170,7 +169,7 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="7 DAY"
+            android:text="@string/weekly_button_text"
             android:id="@+id/dailyButton"
             android:layout_weight="1"
             android:textColor="#ffffffff"
