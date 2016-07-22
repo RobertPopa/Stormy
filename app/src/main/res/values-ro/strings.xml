@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stormy</string>
+    <string name="action_settings">Setări</string>
+    <string name="alert_dialog_title">Eroare Forecast</string>
+    <string name="alert_dialog_message">Eroare de conexiune. Vă rugăm să încercați din nou.</string>
+    <string name="alert_dialog_ok_button_text">OK</string>
+    <string name="title_activity_daily_forecast">DailyForecastActivity</string>
+    <string name="no_daily_forecast">Nu sunt date pentru visualizare</string>
+    <string name="service_not_available">Serviciul Geocoder nu este disponibil.</string>
+    <string name="invalid_lat_long_used">Longitudine si latitudine invalide.</string>
+    <string name="no_address_found">Nu a fost posibil să se gasească adresa.</string>
+    <string name="address_found">Adresa gasită.</string>
+    <string name="hourly_button_text">ORE</string>
+    <string name="weekly_button_text">7 ZILE</string>
+    <string name="rain_snow_text">Precipitații</string>
+    <string name="humidity_text">Umiditate</string>
+    <string name="loading_weather_text">Încărcare vreme...</string>
+    <string name="getting_location_text">Încărcare locație...</string>
+    <string name="network_unavailable">Fără conexiune de date.</string>
+    <string name="api_error_message">"Eroare API Forecast: "</string>
+    <string name="language_not_supported_message">Ne pare rău dar momentan limba română nu este disponibilă. Vizualizarea se va face în limba engleză.</string>
+    <string name="today_label">astăzi</string>
+    <string name="user_chose_no_location">Fără locație nu este posibilă vizualizarea vremii</string>
+</resources>

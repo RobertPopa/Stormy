@@ -7,10 +7,10 @@ android {
 
     defaultConfig {
         applicationId "robertpopa.com.stormy"
-        minSdkVersion 21
+        minSdkVersion 15
         targetSdkVersion 22
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.2"
     }
     buildTypes {
         release {

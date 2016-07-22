@@ -17,4 +17,9 @@
     <string name="humidity_text">Humedad</string>
     <string name="loading_weather_text">Cargando el tiempo...</string>
     <string name="getting_location_text">Cargando ubicación...</string>
+    <string name="network_unavailable">No hay conexión de datos.</string>
+    <string name="api_error_message">"Error de API Forecast: "</string>
+    <string name="language_not_supported_message">Lo sentimos pero actualmente su idioma no está soportado.</string>
+    <string name="today_label">hoy</string>
+    <string name="user_chose_no_location">Sin una ubicación es imposible cargar el tiempo</string>
 </resources>

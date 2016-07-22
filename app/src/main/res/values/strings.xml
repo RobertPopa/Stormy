@@ -16,4 +16,9 @@
     <string name="humidity_text">HUMIDITY</string>
     <string name="loading_weather_text">Loading weather...</string>
     <string name="getting_location_text">Getting location...</string>
+    <string name="network_unavailable">Network is unavailable.</string>
+    <string name="api_error_message">"Forecast API error: "</string>
+    <string name="language_not_supported_message">We are sorry but your language is not supported at the moment.</string>
+    <string name="today_label">Today</string>
+    <string name="user_chose_no_location">Without location it is not possible to load weather conditions</string>
 </resources>

@@ -63,6 +63,15 @@ public class FetchAddressIntentService extends IntentService {
             deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage);
         } else {
             Address address = addresses.get(0);
+
+            // The {@link android.location.address} class provides other options for
+            // fetching address details that you may prefer to use. Here are some examples:
+            // getLocality() ("Mountain View", for example)
+            // getAdminArea() ("CA", for example)
+            // getPostalCode() ("94043", for example)
+            // getCountryCode() ("US", for example)
+            // getCountryName() ("United States", for example)
+
             String city = address.getLocality();
             String country = address.getCountryName();
 

@@ -12,61 +12,123 @@ import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+
+import robertpopa.com.stormy.ui.MainActivity;
 
 /**
  * Created by RobertP on 19/07/16.
  */
-public class LocationProvider implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener{
-
+public class LocationProvider implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
     public abstract interface LocationCallback{
         public void handleNewLocation(Location location, String address);
     }
 
     private static final String TAG = LocationProvider.class.getSimpleName();
     private static final int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+    public static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     private Context mContext;
     private LocationCallback mCallback;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
+    private LocationSettingsRequest mLocationSettingsRequest;
     private Location mLocation;
 
     public LocationProvider(Context context, LocationCallback callback) {
         mContext = context;
         mCallback = callback;
 
-        // Create new Google API client
+        // Build new Google API client
+        buildGoogleApiClient(context);
+
+        // Create new location request
+        createLocationRequest();
+
+        // Build new location settings request
+        buildLocationSettingsRequest();
+    }
+
+    private void buildGoogleApiClient(Context context) {
         mGoogleApiClient = new GoogleApiClient.Builder(context)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
+    }
 
-        // Create new location request
+    private void createLocationRequest() {
         mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(10 * 1000)
                 .setFastestInterval(1 * 1000);
     }
 
+    private void buildLocationSettingsRequest() {
+        mLocationSettingsRequest = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest)
+                .build();
+    }
+
     @Override
     public void onConnected(Bundle bundle) {
         Log.i(TAG, "Location services connected.");
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (  location == null ){
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        Log.i(TAG, "Location: " + mLocation);
+        if (  mLocation == null ){
+            checkLocationSettings();
         } else {
-            mLocation = location;
-            startIntentService(location);
+            startIntentService(mLocation);
         }
+    }
+
+    private void checkLocationSettings() {
+        Log.i(TAG, "Checking location settings.");
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(
+                        mGoogleApiClient,
+                        mLocationSettingsRequest
+                );
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult locationSettingsResult) {
+                final Status status = locationSettingsResult.getStatus();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        Log.i(TAG, "All location settings are satisfied.");
+
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
+                        try {
+                            // Show the dialog by calling startResolutionForResult(), and check the result
+                            // in onActivityResult().
+                            status.startResolutionForResult((MainActivity)mCallback, REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.i(TAG, "PendingIntent unable to execute request.");
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        Log.i(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog " +
+                                "not created.");
+                        break;
+                }
+            }
+        });
     }
 
     @Override
     public void onConnectionSuspended(int i) {
         Log.i(TAG, "Location services suspended. Please reconnect.");
+        connect();
     }
 
     @Override
@@ -89,7 +151,6 @@ public class LocationProvider implements GoogleApiClient.ConnectionCallbacks, Go
 
     public void disconnect(){
         if ( mGoogleApiClient.isConnected() ) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
             mGoogleApiClient.disconnect();
         }
     }
@@ -126,4 +187,11 @@ public class LocationProvider implements GoogleApiClient.ConnectionCallbacks, Go
         }
     }
 
+    public void startLocationUpdate() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+    }
+
+    public void stopLocationUpdate() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    }
 }

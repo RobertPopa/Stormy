@@ -1,5 +1,6 @@
 package robertpopa.com.stormy.ui;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
     @Override
     protected void onStart() {
         super.onStart();
-        if ( !mLocationProvider.hasLocation() ) {
+        if (!mLocationProvider.hasLocation()) {
             mLocationProvider.connect();
         }
     }
@@ -91,12 +92,9 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
     }
 
     private void loadWeather() {
-
         mIsNetworkAvailable = new StormyUtils(this).checkNetwork();
 
         if ( mIsNetworkAvailable ) {
-
-            String language = StormyUtils.getUserLanguage();
 
             // Example URL including query filters
             // https://api.forecast.io/forecast/a6a52c11070a4f4cca26881e67cd684c/40.3657,-3.4824?units=si&lang=es
@@ -108,8 +106,23 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
                         .append(mCurrentLatitude)
                         .append(",")
                         .append(mCurrentLongitude)
-                        .append("?lang=" + language)
-                        .append("&units=" + mCurrentUnitSystem);
+                        .append("?units=" + mCurrentUnitSystem);
+
+            // Supported languages
+            // lang=[language]: Return summary properties in the desired language. (Note that units in the summary will be set according to the units option, above,
+            // so be sure to set both options appropriately.) [language] may be ar (Arabic), be (Belarusian), bs (Bosnian), cs (Czech), de (German), el (Greek),
+            // en (English, which is the default), es (Spanish), fr (French), hr (Croatian), hu (Hungarian), id (Indonesian), it (Italian), is (Icelandic), kw (Cornish),
+            // nb (Norwegian Bokmål), nl (Dutch), pl (Polish), pt (Portuguese), ru (Russian), sk (Slovak), sr (Serbian), sv (Swedish), tet (Tetum), tr (Turkish), uk (Ukrainian),
+            // x-pig-latin (Igpay Atinlay), zh (simplified Chinese), or zh-tw (traditional Chinese).
+
+            String language = StormyUtils.getUserLanguage();
+            if ("es".equals(language)) {
+                forecastURL.append("&lang=" + language);
+            }
+
+            if ("ro".equals(language)) {
+                alertUserDialog(getString(R.string.language_not_supported_message));
+            }
 
             Log.i(TAG, "URL: " + forecastURL.toString());
 
@@ -133,7 +146,6 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
 
                 @Override
                 public void onResponse(Call call, Response response) throws IOException {
-
                     runOnUiThread(new Runnable() {
                         public void run() {
                             toggleRefresh();
@@ -155,15 +167,14 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
                             Log.e(TAG, "JSONException caught: ", e);
                         }
                     } else {
-                        alertUserAboutError();
+                        Log.e(TAG, "Response is not successful: " + response);
+                        alertUserDialog(getString(R.string.api_error_message) + response.code() + " - " + response.message());
                     }
                 }
             });
 
         } else {
-            AlertDialogFragment dialog = new AlertDialogFragment();
-            dialog.setMessage("Network is unavailable.");
-            dialog.show(getFragmentManager(), ALERT_DIALOG_TAG);
+            alertUserDialog(getString(R.string.network_unavailable));
         }
 
     }
@@ -268,13 +279,16 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
         return result;
     }
 
-    private void alertUserAboutError() {
+    private void alertUserDialog(String message) {
         AlertDialogFragment dialog = new AlertDialogFragment();
+        dialog.setMessage(message);
         dialog.show(getFragmentManager(), ALERT_DIALOG_TAG);
     }
 
     @OnClick(R.id.refreshImageView) void refresh(){
-        loadWeather();
+        if (mLocationProvider.hasLocation()) {
+            loadWeather();
+        }
     }
 
     @OnClick(R.id.dailyButton)
@@ -303,7 +317,29 @@ public class MainActivity extends AppCompatActivity implements LocationProvider.
         mCurrentLongitude = location.getLongitude();
         mCurrentAddress = address;
 
+        // Stop the listener
+        mLocationProvider.stopLocationUpdate();
+
         // Load the weather
         loadWeather();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            // Check for the integer request code originally supplied to startResolutionForResult().
+            case LocationProvider.REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Log.i(TAG, "User agreed to make required location settings changes.");
+                        mLocationProvider.startLocationUpdate();
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Log.i(TAG, "User chose not to make required location settings changes.");
+                        alertUserDialog(getString(R.string.user_chose_no_location));
+                        break;
+                }
+                break;
+        }
     }
 }
